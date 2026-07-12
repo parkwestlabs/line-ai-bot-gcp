@@ -28,11 +28,14 @@ echo -n "your_token" | gcloud secrets versions add LINE_CHANNEL_ACCESS_TOKEN --d
 
 ```bash
 REGION=us-central1
+# 一般に、PROJECT_ID は隠すべき、とのこと (docs/deploy-cli.md 参照)
 PROJECT_ID=your-bot-project
+# モノレポでなければ一般に、github レポ名 == cloud run service 名 == docker image 名、とのこと
 SERVICE_NAME=your-line-bot-name-here
 
-REPO_URL="${REGION}-docker.pkg.dev/${PROJECT_ID}/cloud-run-source-deploy"
-IMAGE_TAG="${REPO_URL}/${SERVICE_NAME}:latest"
+GAR_REPO_NAME=cloud-run-source-deploy
+GAR_REPO_URL="${REGION}-docker.pkg.dev/${PROJECT_ID}/${GAR_REPO_NAME}"
+IMAGE_TAG="${GAR_REPO_URL}/${SERVICE_NAME}:latest"
 
 SECRET=LINE_CHANNEL_SECRET
 TOKEN=LINE_CHANNEL_ACCESS_TOKEN
@@ -47,8 +50,14 @@ gcloud run deploy $SERVICE_NAME --image $IMAGE_TAG --region $REGION \
 # Service URL: https://SERVICE_NAME-PROJECT_NUMBER.REGION.run.app
 ```
 
-* 発行された Service URL 末尾に `/webhook` をつけて LINE Developers に登録する
+* Cloud Run 管理画面 > セキュリティ > 認証 > パブリックアクセスを許可
+* 発行された Service URL 末尾に `/webhook` をつけて LINE Developers に登録して、検証ボタンから接続を確認する
 * 万が一 BackgroundTasks が完了しない場合は `--no-cpu-throttling` の追加を検討する
+
+### 3. GitHub Actions による自動ビルド＆デプロイ
+
+* 上記の CLI によるビルド＆デプロイを自動化するための設定
+    * 詳細は [docs/deploy-gha.md](docs/deploy-gha.md) 参照
 
 ## 🛠️ Local Dev
 
