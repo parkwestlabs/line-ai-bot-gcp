@@ -98,7 +98,8 @@ LINE_CHANNEL_ACCESS_TOKEN=your_token_here
 ## Build and Deploy
 
 ```bash
-# 任意の名前でOK
+# 任意の名前でOKだが、分かりやすさのため github レポ名と同じ名前を推奨とのこと
+# モノレポでなければ一般に、github レポ名 == cloud run service 名 == docker image 名、とのこと
 SERVICE_NAME=my-line-bot
 
 # us-central1 は一定の無料枠（リクエスト数やCPU時間）の範囲内であれば無料とのこと
@@ -263,6 +264,14 @@ gcloud secrets versions destroy バージョン番号 --secret=$SECRET_NAME
 gcloud secrets delete $SECRET_NAME
 ```
 
+* シークレットに対して個別に権限を付与する
+
+```bash
+gcloud secrets add-iam-policy-binding $SECRET_NAME \
+    --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+    --role="roles/secretmanager.secretAccessor"
+```
+
 ```bash
 # 通常は環境変数名とシークレット名は一致させる
 # (例外はシークレット名の末尾に _PROD _DEV を付けて分けたい場合)
@@ -294,7 +303,9 @@ gcloud run deploy $SERVICE_NAME \
 > The service account used must be granted the 'Secret Manager Secret Accessor' role (roles/secretmanager.secretAccessor) at the secret, project or higher level.
 
 ```bash
-gcloud secrets add-iam-policy-binding $SECRET_NAME \
+# 上記の secrets add-iam-policy-binding で個別の権限付与が推奨 (最小権限の原則)
+# (参考) 非推奨だが、シークレットごとではなく、プロジェクト全体に対して権限を付与する場合
+gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
     --role="roles/secretmanager.secretAccessor"
 ```

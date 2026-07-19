@@ -1,0 +1,89 @@
+# 1. Cloud Run サービス本体
+import {
+  to = google_cloud_run_v2_service.my_line_bot
+  id = "projects/${var.project_id}/locations/${var.region}/services/${local.service_name}"
+}
+
+# 2. 公開アクセス許可（allUsers への roles/run.invoker）- console から設定する場合はスキップ
+# import {
+#   to = google_cloud_run_v2_service_iam_member.public_access
+#   id = "projects/${var.project_id}/locations/${var.region}/services/${local.service_name} roles/run.invoker allUsers"
+# }
+
+# 3. Artifact Registry リポジトリ（変数 gar_repo_name を使用）
+import {
+  to = google_artifact_registry_repository.cloud_run_source_deploy
+  id = "projects/${var.project_id}/locations/${var.region}/repositories/${var.gar_repo_name}"
+}
+
+# 4. Secret Manager の各シークレット
+import {
+  to = google_secret_manager_secret.line_channel_secret
+  id = "projects/${var.project_id}/secrets/LINE_CHANNEL_SECRET"
+}
+
+import {
+  to = google_secret_manager_secret.line_channel_access_token
+  id = "projects/${var.project_id}/secrets/LINE_CHANNEL_ACCESS_TOKEN"
+}
+
+# 5. 各シークレットに対する個別の Secret Accessor 権限
+import {
+  to = google_secret_manager_secret_iam_member.line_channel_secret_accessor
+  id = "projects/${var.project_id}/secrets/LINE_CHANNEL_SECRET roles/secretmanager.secretAccessor serviceAccount:${data.google_project.current.number}-compute@developer.gserviceaccount.com"
+}
+
+import {
+  to = google_secret_manager_secret_iam_member.line_channel_access_token_accessor
+  id = "projects/${var.project_id}/secrets/LINE_CHANNEL_ACCESS_TOKEN roles/secretmanager.secretAccessor serviceAccount:${data.google_project.current.number}-compute@developer.gserviceaccount.com"
+}
+
+# (参考) Compute Engine デフォルトサービスアカウントへの Secret Accessor 権限
+# import {
+#   to = google_project_iam_member.secret_accessor
+#   id = "${var.project_id}/roles/secretmanager.secretAccessor/serviceAccount:${var.project_id}-compute@developer.gserviceaccount.com"
+# }
+
+# ====================================================================
+# GitHub Actions / Workload Identity Federation 関連のインポート
+# ====================================================================
+
+# 1. デプロイ用サービスアカウント
+import {
+  to = google_service_account.github_actions_deployer
+  id = "projects/${var.project_id}/serviceAccounts/${var.wif_sa_name}@${var.project_id}.iam.gserviceaccount.com"
+}
+
+# 2. サービスアカウントに付与したプロジェクトレベルの IAM 権限（3つ）
+import {
+  to = google_project_iam_member.wif_sa_ar_writer
+  id = "${var.project_id} roles/artifactregistry.writer serviceAccount:${var.wif_sa_name}@${var.project_id}.iam.gserviceaccount.com"
+}
+
+import {
+  to = google_project_iam_member.wif_sa_run_developer
+  id = "${var.project_id} roles/run.developer serviceAccount:${var.wif_sa_name}@${var.project_id}.iam.gserviceaccount.com"
+}
+
+import {
+  to = google_project_iam_member.wif_sa_sa_user
+  id = "${var.project_id} roles/iam.serviceAccountUser serviceAccount:${var.wif_sa_name}@${var.project_id}.iam.gserviceaccount.com"
+}
+
+# 3. Workload Identity プール
+import {
+  to = google_iam_workload_identity_pool.github_pool
+  id = "projects/${var.project_id}/locations/global/workloadIdentityPools/${var.wif_pool_name}"
+}
+
+# 4. Workload Identity プロバイダ
+import {
+  to = google_iam_workload_identity_pool_provider.github_provider
+  id = "projects/${var.project_id}/locations/global/workloadIdentityPools/${var.wif_pool_name}/providers/${var.wif_provider_name}"
+}
+
+# 5. GitHub 連携用 IAM サービスアカウントバインディング（WIF経由での impersonate 許可）
+import {
+  to = google_service_account_iam_member.wif_user
+  id = "projects/${var.project_id}/serviceAccounts/${var.wif_sa_name}@${var.project_id}.iam.gserviceaccount.com roles/iam.workloadIdentityUser principalSet://iam.googleapis.com/projects/${data.google_project.current.number}/locations/global/workloadIdentityPools/${var.wif_pool_name}/attribute.repository/${var.github_repo_owner}/${var.github_repo_name}"
+}

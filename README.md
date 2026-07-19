@@ -11,53 +11,94 @@ LINE bot SDK Python V3 Async 版を GCP Cloud Run で動かす実運用向け LI
 
 ## 🚀 Quick Start (GCP Cloud Run)
 
-* GCP PROJECT 作成済みの前提で、以下のコマンドを実行します。
-    * 詳細は [docs/deploy-cli.md](docs/deploy-cli.md) 参照
+### 0. GCP Project 作成
 
-### 1. シークレットの作成・登録
+* GCP PROJECT を作成、必要な services enable します。
+* 詳細は [docs/deploy-cli.md](docs/deploy-cli.md) 参照
 
 ```bash
-gcloud secrets create LINE_CHANNEL_SECRET --replication-policy="automatic"
-gcloud secrets create LINE_CHANNEL_ACCESS_TOKEN --replication-policy="automatic"
+# 例
+PROJECT_ID=my-bot-20260628-test
+PROJECT_NAME="LINE bot Project"
 
+# project 作成
+gcloud projects create $PROJECT_ID --name="${PROJECT_NAME}"
+# default に設定する
+gcloud config set project $PROJECT_ID
+
+# Cloud Run に必要な service を有効化
+gcloud services enable \
+  artifactregistry.googleapis.com \
+  cloudbuild.googleapis.com \
+  run.googleapis.com \
+  secretmanager.googleapis.com
+```
+
+### 1. Infra 構築
+
+* 詳細は [docs/deploy-terraform.md](docs/deploy-terraform.md) 参照
+
+```bash
+cd terraform-gcp/
+
+gcloud auth application-default login
+
+# terraform.tfvars を作成・値を適宜修正する
+cp terraform.tfvars.sample terraform.tfvars
+```
+
+* 初回の `terraform apply` では docker image がないため、ダミーイメージを指定する
+* cloud_run.tf > template > containers > image を一時的に修正して apply する
+* GitHub Actions による自動ビルドで registry 上に docker image ができたあとは本来の image に戻す
+
+```terraform
+    containers {
+      # 🚀 初回構築時は、Artifact Registryが空なので以下のダミーイメージを指定して apply する
+      image = "us-docker.pkg.dev/cloudrun/container/hello:latest"
+
+      # (その後、GitHub Actionsが成功したら本来のURLに書き換えて、lifecycleで固定する)
+      # image = "${var.region}-docker.pkg.dev/${var.project_id}/${var.gar_repo_name}/${local.service_name}:latest"
+```
+
+```bash
+terraform plan
+terraform apply
+```
+
+### 2. GCP のシークレットの登録
+
+* `terraform apply` で作成された GCP 上の secret に手動で値を入れる
+
+```bash
 echo -n "your_secret" | gcloud secrets versions add LINE_CHANNEL_SECRET --data-file=-
 echo -n "your_token" | gcloud secrets versions add LINE_CHANNEL_ACCESS_TOKEN --data-file=-
 ```
 
-### 2. ビルド＆デプロイ
-
-```bash
-REGION=us-central1
-# 一般に、PROJECT_ID は隠すべき、とのこと (docs/deploy-cli.md 参照)
-PROJECT_ID=your-bot-project
-# モノレポでなければ一般に、github レポ名 == cloud run service 名 == docker image 名、とのこと
-SERVICE_NAME=your-line-bot-name-here
-
-GAR_REPO_NAME=cloud-run-source-deploy
-GAR_REPO_URL="${REGION}-docker.pkg.dev/${PROJECT_ID}/${GAR_REPO_NAME}"
-IMAGE_TAG="${GAR_REPO_URL}/${SERVICE_NAME}:latest"
-
-SECRET=LINE_CHANNEL_SECRET
-TOKEN=LINE_CHANNEL_ACCESS_TOKEN
-
-docker build --platform linux/amd64 -t $IMAGE_TAG . --push
-
-gcloud run deploy $SERVICE_NAME --image $IMAGE_TAG --region $REGION \
-  --allow-unauthenticated --cpu-boost --cpu=1 --memory=512Mi \
-  --min-instances 0 --max-instances 1 \
-  --update-secrets=${SECRET}=${SECRET}:latest,${TOKEN}=${TOKEN}:latest
-
-# Service URL: https://SERVICE_NAME-PROJECT_NUMBER.REGION.run.app
-```
-
-* Cloud Run 管理画面 > セキュリティ > 認証 > パブリックアクセスを許可
-* 発行された Service URL 末尾に `/webhook` をつけて LINE Developers に登録して、検証ボタンから接続を確認する
-* 万が一 BackgroundTasks が完了しない場合は `--no-cpu-throttling` の追加を検討する
-
 ### 3. GitHub Actions による自動ビルド＆デプロイ
 
-* 上記の CLI によるビルド＆デプロイを自動化するための設定
-    * 詳細は [docs/deploy-gha.md](docs/deploy-gha.md) 参照
+* main に push 後に自動で build & deploy される
+* 事前に GitHub Secrets に必要な値を登録
+* 詳細は [docs/deploy-gha.md](docs/deploy-gha.md) 参照
+
+```bash
+terraform output
+# line_bot_url > LINE DevelopersのWebhook URLに登録する
+# artifact_registry_repo_url > GitHub Secrets の GAR_REPO_URL に登録する
+# github_actions_sa_email > GitHub Secrets の WIF_SERVICE_ACCOUNT に登録する
+# workload_identity_provider > GitHub Secrets の WIF_PROVIDER に登録する
+
+# 念のため、PROJECT_ID 表示
+gcloud config get-value project
+
+gh secret set PROJECT_ID --body $PROJECT_ID
+gh secret set WIF_PROVIDER --body $WIF_PROVIDER
+gh secret set WIF_SERVICE_ACCOUNT --body $WIF_SERVICE_ACCOUNT
+gh secret set GAR_REPO_URL --body $GAR_REPO_URL
+```
+
+* Cloud Run 管理画面 > セキュリティ > 認証 > パブリックアクセスを確認・必要なら許可 (初回のみ)
+* 発行された Service URL 末尾に `/webhook` をつけて LINE Developers に登録して、検証ボタンから接続を確認する
+* 万が一 BackgroundTasks が完了しない場合は `--no-cpu-throttling` の追加を検討する
 
 ## 🛠️ Local Dev
 

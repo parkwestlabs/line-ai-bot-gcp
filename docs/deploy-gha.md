@@ -46,26 +46,58 @@ gcloud iam service-accounts list
 * 実際に動かしてエラーログから特定するのが簡単
 
 ```bash
+# 「Artifact Registryの書き込み権限」は、通常はプロジェクトに対して設定する
 # Artifact Registry に Docker イメージをプッシュ
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:${WIF_SERVICE_ACCOUNT}" \
     --role="roles/artifactregistry.writer"
 
-# Cloud Run にアプリケーションをデプロイ
+# 【参考】特定のリポジトリ単体に権限を絞り込む場合
+gcloud artifacts repositories add-iam-policy-binding $GAR_REPO_NAME \
+    --location=$REGION \
+    --project=$PROJECT_ID \
+    --member="serviceAccount:${WIF_SERVICE_ACCOUNT}" \
+    --role="roles/artifactregistry.writer"
+
+# 「Cloud Run 開発者権限」は、プロジェクトに対して設定する
+# (Cloud Run のサービスを新しく作ったり、既存のものを更新・デプロイしたりする権限)
 # (注) 事前に一度も gcloud で手動デプロイしていない場合は初回のみ roles/run.admin が必要とのこと
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:${WIF_SERVICE_ACCOUNT}" \
     --role="roles/run.developer"
 
-gcloud projects add-iam-policy-binding $PROJECT_ID \
+# 「特定のサービスアカウントを操作する権限」を追加する
+# projects 全体ではなく、service-accounts に対して権限を追加する (最小特権の原則)
+# Compute EngineのデフォルトSA（Cloud Runの実行元）を指定するのが一般的
+RUN_IMAGE_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+# GitHub Actionsが「身代わりとしてアタッチしたいSA」のIDをピンポイントで指定する
+gcloud iam service-accounts add-iam-policy-binding $RUN_IMAGE_SA \
+    --project=$PROJECT_ID \
     --member="serviceAccount:${WIF_SERVICE_ACCOUNT}" \
     --role="roles/iam.serviceAccountUser"
+```
+
+* 権限の確認コマンド
+
+```bash
+# 【参考】特定のリポジトリ単体に権限を絞り込む場合
+gcloud artifacts repositories get-iam-policy $GAR_REPO_NAME \
+    --location=$REGION \
+    --project=$PROJECT_ID \
+    --flatten="bindings[].members" \
+    --format="table(bindings.members, bindings.role)"
 
 # projects get-iam-policy 一覧
 gcloud projects get-iam-policy $PROJECT_ID \
     --flatten="bindings[].members" \
     --format="table(bindings.members, bindings.role)" \
     --sort-by="bindings.members"
+
+gcloud iam service-accounts get-iam-policy $RUN_IMAGE_SA \
+    --project=$PROJECT_ID \
+    --flatten="bindings[].members" \
+    --format="table(bindings.members, bindings.role)"
 ```
 
 * 実行用 service account にも別途権限付与が必要とのこと
@@ -218,4 +250,20 @@ IMAGE_LIST=($(gcloud artifacts docker images list $GAR_REPO_URL \
 for IMAGE in $IMAGE_LIST; do
     gcloud artifacts docker images delete "$IMAGE" --delete-tags --quiet
 done
+```
+
+* cleanup policy の設定
+
+```bash
+# 一覧
+gcloud artifacts repositories list-cleanup-policies $GAR_REPO_NAME \
+    --project=$PROJECT_ID \
+    --location=$REGION
+
+# 例: latest だけを残して、それ以外のタグが外れたゴミ（UNTAGGED）だけを対象にする
+# pushされてから24時間（86400秒）経ったゴミを消す
+gcloud artifacts repositories set-cleanup-policies $GAR_REPO_NAME \
+    --project=$PROJECT_ID \
+    --location=$REGION \
+    --policy=.gar_policy.json
 ```

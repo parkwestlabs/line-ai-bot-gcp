@@ -13,6 +13,14 @@
         },
         "editor.defaultFormatter": "charliermarsh.ruff"
     },
+    "[terraform]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "hashicorp.terraform"
+    },
+    "[terraform-vars]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "hashicorp.terraform"
+    },
     "cSpell.words": [
         "ASGI",
         "linebot"
