@@ -1,0 +1,22 @@
+name: Backend
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "backend/**" ]
+
+# Google Cloud (Workload Identity) と安全に連携するために必須の権限
+permissions:
+  contents: 'read'  # リポジトリのコードを読み取る権限
+  id-token: 'write' # GCPと認証するための一時的なOIDCトークンを発行する権限
+
+jobs:
+  run-ci:
+    name: 🧪 Lint & Test
+    uses: ./.github/workflows/ci.yml
+
+  run-cd:
+    name: 🚀 Deploy
+    needs: run-ci
+    uses: ./.github/workflows/cd.yml
+    secrets: inherit # 💡 呼び出し先で secrets (WIF等) を使うために必須

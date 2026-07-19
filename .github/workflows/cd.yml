@@ -1,12 +1,7 @@
 name: CD
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
-    branches:
-      - main
+  workflow_call:
 
 env:
   REGION: "us-central1"                             # デプロイ先のリージョン
@@ -16,12 +11,6 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    # CIが「成功」して完了した場合のみ、このジョブを実行する
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    # Workload Identity で OIDCトークンを取得するために必須の設定
-    permissions:
-      contents: 'read'
-      id-token: 'write'
 
     steps:
       - uses: actions/checkout@v7
@@ -53,7 +42,8 @@ jobs:
       - name: Build and Push Image
         uses: docker/build-push-action@v7
         with:
-          context: .
+          context: ./backend
+          file: ./backend/Dockerfile
           push: true
           # (注) latest に加えて ${{ github.sha }} を指定する流派もあるが、ここでは最新のみ保存する
           tags: ${{ secrets.GAR_REPO_URL }}/${{ env.IMAGE_NAME }}:latest
