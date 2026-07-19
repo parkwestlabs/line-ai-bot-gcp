@@ -69,11 +69,5 @@ jobs:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.REGION }}
           image: ${{ secrets.GAR_REPO_URL }}/${{ env.IMAGE_NAME }}:latest
-          flags: |
-            --cpu-boost
-            --max-instances=1
-          secrets: |
-            LINE_CHANNEL_SECRET=LINE_CHANNEL_SECRET:latest
-            LINE_CHANNEL_ACCESS_TOKEN=LINE_CHANNEL_ACCESS_TOKEN:latest
 
       - run: echo "Deployed URL ${{ steps.deploy.outputs.url }}"
