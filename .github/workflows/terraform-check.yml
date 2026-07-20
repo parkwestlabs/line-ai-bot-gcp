@@ -1,0 +1,16 @@
+name: Terraform Check
+
+on:
+  push:
+    paths:
+      - 'terraform-gcp/**'
+
+jobs:
+  fmt-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive terraform-gcp/
