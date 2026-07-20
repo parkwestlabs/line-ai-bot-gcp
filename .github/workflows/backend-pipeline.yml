@@ -4,6 +4,9 @@ on:
   push:
     branches: [ "main" ]
     paths: [ "backend/**" ]
+  pull_request:
+    branches: [ "main" ]
+    paths: [ "backend/**" ]
 
 # Google Cloud (Workload Identity) と安全に連携するために必須の権限
 permissions:
@@ -17,6 +20,8 @@ jobs:
 
   run-cd:
     name: 🚀 Deploy
+    # PR作成時は Skip され、main へのマージ時のみ実行される
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: run-ci
     uses: ./.github/workflows/cd.yml
     secrets: inherit # 💡 呼び出し先で secrets (WIF等) を使うために必須

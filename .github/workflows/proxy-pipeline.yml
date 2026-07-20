@@ -1,0 +1,25 @@
+name: Proxy
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "proxy/**" ]
+  pull_request:
+    branches: [ "main" ]
+    paths: [ "proxy/**" ]
+
+permissions:
+  contents: 'read'
+  id-token: 'write'
+
+jobs:
+  run-ci:
+    name: 🧪 Proxy Test
+    uses: ./.github/workflows/proxy-ci.yml
+
+  run-cd:
+    name: 🚀 Deploy Proxy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: run-ci
+    uses: ./.github/workflows/proxy-cd.yml
+    secrets: inherit
