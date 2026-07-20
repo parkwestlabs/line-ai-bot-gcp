@@ -6,7 +6,6 @@ LINE bot SDK Python V3 Async 版を GCP Cloud Run で動かす実運用向け LI
 
 * 入り口に go を利用することで、コールドスタートしても高速レスポンスします (実測値: 121ms)
 * メッセージ重複時はスルーします。(`--max-instances 1` 前提)
-* FastAPIの `BackgroundTasks` を利用し、レスポンス後に裏側で非同期処理します。
 * uv を使い、Pylance / Ruff の厳格な型チェック・静的解析を100%通過しています。
 
 ## 🚀 Quick Start (GCP Cloud Run)
@@ -98,7 +97,7 @@ gh secret set GAR_REPO_URL --body $GAR_REPO_URL
 
 * Cloud Run 管理画面 > セキュリティ > 認証 > パブリックアクセスを確認・必要なら許可 (初回のみ)
 * 発行された Service URL 末尾に `/webhook` をつけて LINE Developers に登録して、検証ボタンから接続を確認する
-* 万が一 BackgroundTasks が完了しない場合は `--no-cpu-throttling` の追加を検討する
+* 万が一 Go の非同期の転送処理が完了しない場合は `--no-cpu-throttling` の追加を検討する
 
 ## 🛠️ Local Dev Notes
 

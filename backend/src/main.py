@@ -5,7 +5,6 @@ from contextlib import asynccontextmanager
 from typing import Annotated, Never
 
 from fastapi import (
-    BackgroundTasks,
     Depends,
     FastAPI,
     Header,
@@ -133,13 +132,9 @@ async def reply_message(
 async def webhook(
     request: Request,
     events: Annotated[list[Event], Depends(get_events)],
-    background_tasks: BackgroundTasks,
 ) -> Response:
-    """
-    LINEからメッセージが届いたら即座にResponseを返し、実際の処理はbackgroundで実行する
-    """
     msg_api: AsyncMessagingApi = request.app.state.msg_api
-    background_tasks.add_task(async_bot_process, msg_api, events)
+    await async_bot_process(msg_api, events)
 
     return Response(content="OK", status_code=status.HTTP_200_OK)
 
