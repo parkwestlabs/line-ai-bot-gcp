@@ -3,6 +3,7 @@
         "ms-python.python",
         "charliermarsh.ruff",
         "hashicorp.terraform",
-        "sonarsource.sonarlint-vscode"
+        "sonarsource.sonarlint-vscode",
+        "golang.go"
     ]
 }

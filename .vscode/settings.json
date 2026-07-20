@@ -1,9 +1,12 @@
 {
     "python.terminal.useEnvFile": true,
     "python.analysis.extraPaths": [
-        "${workspaceFolder}/src",
+        "${workspaceFolder}/backend/src",
     ],
     "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": [
+        "-c", "${workspaceFolder}/backend/pyproject.toml"
+    ],
     "python.testing.unittestEnabled": false,
     "[python]": {
         "editor.formatOnSave": true,
@@ -24,5 +27,7 @@
     "cSpell.words": [
         "ASGI",
         "linebot"
-    ]
+    ],
+    "git.blame.editorDecoration.enabled": true,
+    "git.blame.ignoreWhitespace": true
 }

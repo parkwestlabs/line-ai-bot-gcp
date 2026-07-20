@@ -1,0 +1,21 @@
+services:
+  proxy:
+    build:
+      context: ./proxy
+    ports:
+      - "8080:8080"
+    environment:
+      - LINE_CHANNEL_SECRET=dummy_secret_for_local_test
+      - PYTHON_BACKEND_URL=http://backend:8080/webhook
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+    # ホスト側から直接テストしたい場合は 8001 -> コンテナ内 8080
+    ports:
+      - "8001:8080"
+    environment:
+      - LINE_CHANNEL_SECRET=dummy_secret_for_local_test
+      - LINE_CHANNEL_ACCESS_TOKEN=dummy_token_for_local_test
