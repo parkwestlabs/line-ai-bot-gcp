@@ -58,7 +58,8 @@ resource "google_cloud_run_v2_service" "my_line_bot" {
   # commit-sha の変更を「Terraformの監視対象から外す（無視する）」という設定
   lifecycle {
     ignore_changes = [
-      template[0].labels["commit-sha"]
+      template[0].labels["commit-sha"],
+      template[0].labels["goog-terraform-provisioned"],
     ]
   }
 }

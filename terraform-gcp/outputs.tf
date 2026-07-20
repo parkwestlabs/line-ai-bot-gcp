@@ -1,6 +1,6 @@
-output "line_bot_url" {
+output "line_bot_proxy_url" {
   description = "LINE DevelopersのWebhook URLに登録するCloud RunのURL"
-  value       = google_cloud_run_v2_service.my_line_bot.uri
+  value       = google_cloud_run_v2_service.my_line_bot_proxy.uri
 }
 
 output "github_actions_sa_email" {
