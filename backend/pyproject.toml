@@ -48,6 +48,9 @@ pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "--cov=src --cov-branch --cov-report=term-missing --cov-report=html"
 
+[tool.coverage.report]
+fail_under = 90
+
 [tool.pytest_env]
 LINE_CHANNEL_SECRET = "dummy_secret"
 LINE_CHANNEL_ACCESS_TOKEN = "dummy_token"
