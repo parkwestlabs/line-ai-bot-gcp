@@ -2,6 +2,7 @@ from linebot.v3.messaging import (
     ApiException,
     AsyncMessagingApi,
     Message,
+    PushMessageRequest,
     ReplyMessageRequest,
     ShowLoadingAnimationRequest,
 )
@@ -45,3 +46,39 @@ async def reply_message(
     )
 
     await msg_api.reply_message(reply_request)
+
+
+async def push_message(
+    msg_api: AsyncMessagingApi,
+    user_id: str,
+    messages: list[Message],
+    *,
+    notification_disabled: bool = False,
+) -> None:
+
+    push_request = PushMessageRequest(
+        to=user_id,
+        messages=messages,
+        notificationDisabled=notification_disabled,
+        customAggregationUnits=None,
+    )
+    await msg_api.push_message(push_request)
+
+
+async def reply_message_safely(
+    msg_api: AsyncMessagingApi,
+    user_id: str,
+    reply_token: str,
+    messages: list[Message],
+    *,
+    notification_disabled: bool = False,
+) -> None:
+    try:
+        await reply_message(
+            msg_api, reply_token, messages, notification_disabled=notification_disabled
+        )
+    except ApiException as e:
+        exception(f"Reply failed ({e.status}), fallback to Push Message for {user_id}")
+        await push_message(
+            msg_api, user_id, messages, notification_disabled=notification_disabled
+        )

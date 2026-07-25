@@ -10,7 +10,11 @@ from linebot.v3.webhooks import (
     UserSource,
 )
 
-from clients.line_client import get_user_name, reply_message, show_loading_animation
+from clients.line_client import (
+    get_user_name,
+    reply_message_safely,
+    show_loading_animation,
+)
 from config.gcp_logger import info
 
 
@@ -28,7 +32,7 @@ async def process_event(msg_api: AsyncMessagingApi, event: Event) -> None:
 
         msg = f"{user_name}さん、友だち追加ありがとうございます！よろしくね！"
         messages = [Message.from_dict({"type": "text", "text": msg})]
-        await reply_message(msg_api, event.reply_token, messages)
+        await reply_message_safely(msg_api, user_id, event.reply_token, messages)
         return
 
     if isinstance(event, UnfollowEvent):
@@ -67,4 +71,4 @@ async def handle_text_message(
     ai_reply = f"{user_name}さんは「{user_text}」と言いましたね？"
 
     messages = [Message.from_dict({"type": "text", "text": ai_reply})]
-    await reply_message(msg_api, reply_token, messages)
+    await reply_message_safely(msg_api, user_id, reply_token, messages)
