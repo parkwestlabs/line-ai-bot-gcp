@@ -18,6 +18,7 @@ dev = [
     "pytest>=9.1.0",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
+    "pytest-env>=1.7.0",
     "pytest-mock>=3.15.1",
     "ruff>=0.15.18",
 ]
@@ -46,3 +47,7 @@ allowed-confusables = ["（", "）", "：", "？", "！"]
 pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "--cov=src --cov-branch --cov-report=term-missing --cov-report=html"
+
+[tool.pytest_env]
+LINE_CHANNEL_SECRET = "dummy_secret"
+LINE_CHANNEL_ACCESS_TOKEN = "dummy_token"

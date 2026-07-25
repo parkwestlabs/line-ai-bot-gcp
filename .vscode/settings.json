@@ -3,11 +3,10 @@
     "python.analysis.extraPaths": [
         "${workspaceFolder}/backend/src",
     ],
+    "python.defaultInterpreterPath": "${workspaceFolder}/backend/.venv/bin/python",
     "python.testing.pytestEnabled": true,
-    "python.testing.pytestArgs": [
-        "-c", "${workspaceFolder}/backend/pyproject.toml"
-    ],
     "python.testing.unittestEnabled": false,
+    "python.testing.cwd": "${workspaceFolder}/backend",
     "[python]": {
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
@@ -15,6 +14,10 @@
             "source.organizeImports": "explicit"
         },
         "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "go.coverOnSave": true,
+    "go.coverageDecorator": {
+        "type": "gutter"
     },
     "[terraform]": {
         "editor.formatOnSave": true,
