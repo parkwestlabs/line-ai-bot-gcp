@@ -1,3 +1,5 @@
+import importlib
+
 import pytest
 from fastapi.testclient import TestClient
 from linebot.v3 import WebhookParser
@@ -5,7 +7,7 @@ from linebot.v3.messaging import AsyncMessagingApi
 from linebot.v3.webhooks import Event, MessageEvent, UserSource
 from pytest_mock import MockerFixture, MockType
 
-from main import app
+import main
 
 
 @pytest.fixture
@@ -18,20 +20,34 @@ def mock_parser(mocker: MockerFixture) -> WebhookParser:
     return mocker.MagicMock(spec=WebhookParser)
 
 
+# Note: using importlib to both invalidate cached modules and reload imported modules
+# (thus refreshing the code & state). https://stackoverflow.com/a/71428106
+
+
 @pytest.fixture
 def client(mock_msg_api: AsyncMessagingApi, mock_parser: WebhookParser):
     """モックを受け取って、app.stateに仕込んでからclientを返す"""
-    app.state.msg_api = mock_msg_api
-    app.state.parser = mock_parser
-    return TestClient(app)
+    importlib.reload(main)
+    app = main.app
+
+    # with構文でTestClientを作成し、lifespan の起動・終了処理を正しく走らせる
+    with TestClient(app) as test_client:
+        app.state.msg_api = mock_msg_api
+        app.state.parser = mock_parser
+        yield test_client
 
 
 @pytest.fixture
 def client_with_error(mock_parser: MockType):
     """webhookのエンドポイントで予期せぬエラーをわざと起こすためのクライアント"""
+    importlib.reload(main)
+    app = main.app
+
     mock_parser.parse.side_effect = Exception("Fatal database/server error")
-    app.state.parser = mock_parser
-    return TestClient(app, raise_server_exceptions=False)
+
+    with TestClient(app, raise_server_exceptions=False) as test_client:
+        app.state.parser = mock_parser
+        yield test_client
 
 
 @pytest.fixture
