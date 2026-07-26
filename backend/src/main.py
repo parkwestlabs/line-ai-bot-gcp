@@ -1,4 +1,3 @@
-from collections import deque
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -21,11 +20,9 @@ from linebot.v3.messaging import (
 
 from config.gcp_logger import error, exception, info, setup_logging
 from config.settings import settings
+from routers import webhook
 
 setup_logging()
-
-# メモリ上に直近100件のイベントIDをキャッシュ（注: 単一インスタンス前提）
-processed_event_ids = deque(maxlen=100)
 
 
 @asynccontextmanager
@@ -43,6 +40,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
 
 app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
+
+app.include_router(webhook.router)
 
 
 @app.exception_handler(InvalidSignatureError)

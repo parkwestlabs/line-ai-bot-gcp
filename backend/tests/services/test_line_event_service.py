@@ -11,7 +11,6 @@ from linebot.v3.webhooks import (
 )
 from pytest_mock import AsyncMockType, MockerFixture, MockType
 
-from main import processed_event_ids
 from routers.webhook import async_bot_process
 from services.line_event_service import process_event
 
@@ -34,33 +33,6 @@ class TestBotProcess:
         await async_bot_process(mock_msg_api, [dummy_event])
 
         mock_process_event.assert_called_once_with(mock_msg_api, dummy_event)
-
-    async def test_async_bot_process_duplicate_event(
-        self, mocker: MockerFixture, mock_msg_api: AsyncMessagingApi
-    ):
-        """正常系: 同じwebhook_event_idが連続で届いた際、2回目は重複として排除するか"""
-        processed_event_ids.clear()
-
-        mock_process_event = mocker.patch(
-            "routers.webhook.process_event", mocker.AsyncMock()
-        )
-        # 💡 config.gcp_logger ではなく、routers.webhookのパッチターゲットを修正
-        mock_info = mocker.patch("routers.webhook.info")
-
-        dummy_id = "evt_duplicate_test_12345"
-        mock_event1 = mocker.MagicMock()
-        mock_event1.webhook_event_id = dummy_id
-
-        mock_event2 = mocker.MagicMock()
-        mock_event2.webhook_event_id = dummy_id
-
-        events = [mock_event1, mock_event2]
-        await async_bot_process(mock_msg_api, events)
-
-        # 1回目だけ呼ばれる
-        mock_process_event.assert_called_once_with(mock_msg_api, mock_event1)
-        # 2回目は重複ログが出る
-        mock_info.assert_called_once_with(f"Duplicate event ignored: {dummy_id}")
 
     async def test_async_bot_process_exception(
         self, mocker: MockerFixture, mock_msg_api: AsyncMessagingApi, dummy_event: Event

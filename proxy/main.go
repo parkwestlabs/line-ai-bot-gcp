@@ -102,6 +102,8 @@ func verifySignature(secret string, body []byte, signature string) bool {
 	return hmac.Equal([]byte(signature), []byte(expectedSignature))
 }
 
+// コールドスタートでレスポンスが遅れると同じイベントを再送してくる
+// At-Least-Once 配信ポリシーのため event が重複する可能性がある
 // WebhookEventID が重複していれば true を返す
 func isDuplicateEvent(body []byte) bool {
 	var request LineWebhookRequest
