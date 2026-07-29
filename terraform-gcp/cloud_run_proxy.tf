@@ -17,7 +17,7 @@ resource "google_cloud_run_v2_service" "my_line_bot_proxy" {
     labels = {
       managed-by = "github-actions"
     }
-    service_account = "${data.google_project.current.number}-compute@developer.gserviceaccount.com"
+    service_account = google_service_account.cloudrun_sa.email
 
     containers {
       # 🚀 初回 terraform apply 時は Artifact Registry にイメージがないため、

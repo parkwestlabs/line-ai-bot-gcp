@@ -30,15 +30,15 @@ resource "google_service_account" "github_actions_deployer" {
 
 # GitHubとサービスアカウントを結ぶ最初の認証の鍵（ログイン許可）
 resource "google_service_account_iam_member" "wif_user" {
+  service_account_id = google_service_account.github_actions_deployer.name
   member             = "principalSet://iam.googleapis.com/projects/${data.google_project.current.number}/locations/global/workloadIdentityPools/${var.wif_pool_name}/attribute.repository/${var.github_repo_owner}/${var.github_repo_name}"
-  service_account_id = "projects/${var.project_id}/serviceAccounts/${google_service_account.github_actions_deployer.email}"
   role               = "roles/iam.workloadIdentityUser"
 }
 
 # ログインした後に、Cloud Runのデプロイで他のSA（Computeデフォルト等）を身代わりに使うための鍵
 resource "google_service_account_iam_member" "wif_sa_sa_user" {
+  service_account_id = google_service_account.cloudrun_sa.name
   member             = "serviceAccount:${google_service_account.github_actions_deployer.email}"
-  service_account_id = "projects/${var.project_id}/serviceAccounts/${data.google_project.current.number}-compute@developer.gserviceaccount.com"
   role               = "roles/iam.serviceAccountUser"
 }
 

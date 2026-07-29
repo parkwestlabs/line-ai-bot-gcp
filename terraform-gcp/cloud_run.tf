@@ -12,7 +12,8 @@ resource "google_cloud_run_v2_service" "my_line_bot" {
     labels = {
       managed-by = "github-actions"
     }
-    service_account = "${data.google_project.current.number}-compute@developer.gserviceaccount.com"
+    service_account = google_service_account.cloudrun_sa.email
+
     containers {
       # 🚀 初回構築時は、Artifact Registryが空なので以下のダミーイメージを指定して apply する
       # image = "us-docker.pkg.dev/cloudrun/container/hello:latest"
@@ -62,4 +63,7 @@ resource "google_cloud_run_v2_service" "my_line_bot" {
       template[0].labels["goog-terraform-provisioned"],
     ]
   }
+
+  # services.tf でAPIの有効化が完了してからデプロイするように制御
+  depends_on = [google_project_service.enabled_services]
 }

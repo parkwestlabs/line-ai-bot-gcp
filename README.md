@@ -12,7 +12,7 @@ LINE bot SDK Python V3 Async 版を GCP Cloud Run で動かす実運用向け LI
 
 ### 0. GCP Project 作成
 
-* GCP PROJECT を作成、必要な services enable します。
+* GCP PROJECT を作成します。
 * 詳細は [docs/deploy-cli.md](docs/deploy-cli.md) 参照
 
 ```bash
@@ -24,13 +24,6 @@ PROJECT_NAME="LINE bot Project"
 gcloud projects create $PROJECT_ID --name="${PROJECT_NAME}"
 # default に設定する
 gcloud config set project $PROJECT_ID
-
-# Cloud Run に必要な service を有効化
-gcloud services enable \
-  artifactregistry.googleapis.com \
-  cloudbuild.googleapis.com \
-  run.googleapis.com \
-  secretmanager.googleapis.com
 ```
 
 ### 1. Infra 構築

@@ -21,7 +21,7 @@ resource "google_secret_manager_secret_iam_member" "line_bot_secret_accessors" {
   for_each = toset(local.secret_names)
 
   project   = var.project_id
-  member    = "serviceAccount:${data.google_project.current.number}-compute@developer.gserviceaccount.com"
+  member    = "serviceAccount:${google_service_account.cloudrun_sa.email}"
   secret_id = google_secret_manager_secret.line_bot_secrets[each.value].id
   role      = "roles/secretmanager.secretAccessor"
 }
