@@ -8,6 +8,7 @@ variable "cloudrun_sa_roles" {
   default = [
     "roles/storage.objectViewer",
     "roles/logging.logWriter",
+    "roles/aiplatform.user",
   ]
 }
 

@@ -5,6 +5,7 @@ variable "gcp_services" {
     "cloudbuild.googleapis.com",
     "run.googleapis.com", # Cloud Run
     "secretmanager.googleapis.com",
+    "aiplatform.googleapis.com", # Gemini (Gemini Enterprise Agent Platform)
   ]
 }
 

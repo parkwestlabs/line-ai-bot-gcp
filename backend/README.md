@@ -8,13 +8,18 @@
 ```bash
 uv sync
 
+# Gemini 接続用
+gcloud auth application-default login
+
 uv run fastapi dev src/main.py
 
 # または
 
 docker build -t my-bot-app .
 # local 開発デフォルトポートは 8000 だが、コンテナ内では 8080 で起動する
-docker run --rm -p 8000:8080 --env-file .env.example my-bot-app
+docker run --rm -p 8000:8080 \
+    -v ~/.config/gcloud:/home/appuser/.config/gcloud \
+    --env-file ../.env.example my-bot-app
 ```
 
 ## アクセスのテスト

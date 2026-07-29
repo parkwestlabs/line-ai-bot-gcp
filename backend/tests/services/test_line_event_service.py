@@ -60,7 +60,12 @@ class TestBotProcess:
             "services.line_event_service.get_user_name",
             mocker.AsyncMock(return_value="テスト太郎"),
         )
-        mocker.patch("asyncio.sleep", mocker.AsyncMock())  # 10秒待つのをスキップ
+        mocker.patch(
+            "services.line_event_service.ask_gemini",
+            mocker.AsyncMock(
+                return_value="テスト太郎さんは「こんにちは」と言いましたね？"
+            ),
+        )
 
         # メッセージ内容をテキストに設定
         mock_message = mocker.MagicMock(spec=TextMessageContent)

@@ -29,6 +29,7 @@
     },
     "cSpell.words": [
         "ASGI",
+        "cloudrun",
         "linebot"
     ],
     "git.blame.editorDecoration.enabled": true,

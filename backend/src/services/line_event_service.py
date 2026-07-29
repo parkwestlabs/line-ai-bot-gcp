@@ -1,5 +1,3 @@
-import asyncio
-
 from linebot.v3.messaging import AsyncMessagingApi, Message
 from linebot.v3.webhooks import (
     Event,
@@ -10,12 +8,14 @@ from linebot.v3.webhooks import (
     UserSource,
 )
 
+from clients.gemini_client import ask_gemini
 from clients.line_client import (
     get_user_name,
     reply_message_safely,
     show_loading_animation,
 )
 from config.gcp_logger import info
+from models.chat import ChatRequest
 
 
 async def process_event(msg_api: AsyncMessagingApi, event: Event) -> None:
@@ -66,9 +66,8 @@ async def handle_text_message(
     user_text = message_content.text
     info(f"[{user_id} ({user_name})]: {user_text}")
 
-    # 重い処理（LLMの呼び出しなどを想定）
-    await asyncio.sleep(10)
-    ai_reply = f"{user_name}さんは「{user_text}」と言いましたね？"
+    request = ChatRequest(user_id=user_id, user_name=user_name, user_text=user_text)
+    ai_reply = await ask_gemini(request)
 
     messages = [Message.from_dict({"type": "text", "text": ai_reply})]
     await reply_message_safely(msg_api, user_id, reply_token, messages)
