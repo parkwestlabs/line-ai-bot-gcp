@@ -8,6 +8,8 @@ dependencies = [
     "fastapi>=0.139.2",
     "google-genai>=2.14.0",
     "line-bot-sdk>=3.23.1",
+    "mdformat>=1.0.0",
+    "mdformat-gfm>=1.0.0",
     "pydantic-settings>=2.14.2",
     "uvicorn>=0.51.0",
 ]
