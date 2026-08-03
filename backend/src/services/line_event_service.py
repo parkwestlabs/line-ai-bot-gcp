@@ -16,6 +16,7 @@ from clients.line_client import (
 )
 from config.gcp_logger import info
 from models.chat import ChatRequest
+from utils.llm_utils import clean_llm_output
 
 
 async def process_event(msg_api: AsyncMessagingApi, event: Event) -> None:
@@ -68,6 +69,7 @@ async def handle_text_message(
 
     request = ChatRequest(user_id=user_id, user_name=user_name, user_text=user_text)
     ai_reply = await ask_gemini(request)
+    ai_reply_clean = clean_llm_output(ai_reply)
 
-    messages = [Message.from_dict({"type": "text", "text": ai_reply})]
+    messages = [Message.from_dict({"type": "text", "text": ai_reply_clean})]
     await reply_message_safely(msg_api, user_id, reply_token, messages)
