@@ -29,6 +29,7 @@ select = ["ALL"]
 ignore = [
     "D",
     "TC",
+    "CPY",
     "COM812",
     "G004",     # Logging statement uses f-string
     "INP001",   # an implicit namespace package
